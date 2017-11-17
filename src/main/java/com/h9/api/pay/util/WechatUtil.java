@@ -161,56 +161,26 @@ public class WechatUtil {
     public static Map<String, String> parseXml(HttpServletRequest request) throws Exception {
         // 将解析结果存储在HashMap中
         Map<String, String> map = new HashMap<>();
-        // 从request中取得输入流
-      /*  InputStream inputStream = request.getInputStream();
-        int i = -1;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
-        int len;
-        while ((len = inputStream.read(buffer)) > -1 ) {
-            baos.write(buffer, 0, len);
-        }
-        baos.flush();*/
-       /* BufferedReader reader = null;
-
-        reader = request.getReader();
-        String line = "";
-        String xmlString = null;
-        StringBuffer inputString = new StringBuffer();
-
-        while ((line = reader.readLine()) != null) {
-            inputString.append(line);
-        }
-        xmlString = inputString.toString();
-        request.getReader().close();
-        System.out.println("----接收到的数据如下：---" + xmlString);
-*/
         InputStream inStream = request.getInputStream();
-        //if(inStream != null){
-            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            byte[] tempBytes = new byte[1024];
-            int count = -1;
-            while((count = inStream.read(tempBytes, 0, 1024)) != -1){
-                outStream.write(tempBytes, 0, count);
+        String result = null;
+        try {
+            if(inStream != null){
+                ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                byte[] tempBytes = new byte[2048];
+                int count = -1;
+                while((count = inStream.read(tempBytes, 0, 2048)) != -1){
+                    outStream.write(tempBytes, 0, count);
+                }
+                tempBytes = null;
+                outStream.flush();
+                result = new String(outStream.toByteArray(), "UTF-8");
             }
-            tempBytes = null;
-            outStream.flush();
-            String result = new String(outStream.toByteArray(), "UTF-8");
-        //}
-
-		/* 输入流读取一次就清空了，故备份 */
-        //InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
-        //InputStream stream2 = new ByteArrayInputStream(baos.toByteArray());
-       // i = -1;
-      /*  ByteArrayOutputStream baos1 = new ByteArrayOutputStream();
-        while ((i = stream1.read()) != -1) {
-            baos.write(i);
+        } catch (Exception e) {
+            result = null;
         }
-        // 保留微信返回的原数据
-        String requestContent = new String(baos1.toByteArray(), "utf-8");
-        map.put("formDataSource", requestContent);*/
 
-        // 读取输入流
+
+		// 读取输入流
         SAXReader saxReader = new SAXReader();
         Document document = saxReader.read(new ByteArrayInputStream(result.getBytes("UTF-8")));
         // 得到xml根元素

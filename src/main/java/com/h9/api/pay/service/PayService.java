@@ -88,12 +88,11 @@ public class PayService {
         logger.info("notify params from wx : " + log);
         WxPayResponse response = new WxPayResponse();
         try {
-           /* if (!WechatUtil.verifySign(paymentConfig, map)) {
+            if (!WechatUtil.verifySign(paymentConfig, map)) {
                 logger.info("wxPayResponse: verifySign failed, return false ");
                 response.setReturn_code(WechatUtil.FAILED);
                 return response;
             }
-*/
             if (StringUtils.equals(notification.getReturn_code(), WechatUtil.SUCCESS)) {
                 String prepayId = notification.getOut_trade_no();
 

@@ -34,7 +34,7 @@ public class RequestLoggerFilter implements ContainerRequestFilter {
         logger.debug("Request MediaType:" + requestContext.getMediaType());
         logger.debug("Request Headers:" + headers);
         try {
-            if ("POST".equals(requestMethod) || "PUT".equals(requestMethod) && requestContext.getEntityStream() != null) {
+            if (!uri.contains("notify/wxjs") && ("POST".equals(requestMethod) || "PUT".equals(requestMethod) && requestContext.getEntityStream() != null)) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 IOUtils.copy(requestContext.getEntityStream(), baos);
                 byte[] bytes = baos.toByteArray();
