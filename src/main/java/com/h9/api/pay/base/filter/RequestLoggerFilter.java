@@ -28,10 +28,6 @@ public class RequestLoggerFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) throws IOException {
         MultivaluedMap<String, String> headers = requestContext.getHeaders();
 
-        requestContext.getHeaders().putSingle("Access-Control-Allow-Origin", "*");
-        requestContext.getHeaders().putSingle("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
-        requestContext.getHeaders().putSingle("Access-Control-Allow-Credentials", "true");
-        requestContext.getHeaders().putSingle("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
         String requestMethod = requestContext.getMethod();
         String uri = requestContext.getUriInfo().getRequestUri().toString();
         logger.debug("Request {} {}", requestMethod, uri);
