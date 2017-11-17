@@ -57,7 +57,6 @@ public class PayApi {
             notifyParams.putAll(requestData);
         } catch (Exception e) {
             WxPayResponse response = new WxPayResponse();
-
             e.printStackTrace();
         }
         WxPayNotification notification = JSONObject.parseObject(JSONObject.toJSONString(notifyParams), WxPayNotification.class);

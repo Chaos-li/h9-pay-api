@@ -76,9 +76,9 @@ public class PayService {
         Donation donation = generateDonation(model);
 
         // 获取预支付订单
-        //WxPrepayInfo prepayInfo = getWxPrepayInfo(donation, model.getOpenid());
+        WxPrepayInfo prepayInfo = getWxPrepayInfo(donation, model.getOpenid());
 
-        return new Result(Result.SUCCESS, "获取预支付订单成功", null);
+        return new Result(Result.SUCCESS, "获取预支付订单成功", prepayInfo);
     }
 
     public WxPayResponse processWxNotification(WxPayNotification notification) {
