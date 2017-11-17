@@ -41,6 +41,7 @@ public class WechatUtil {
     private static String GET_ACCESS_TOKEN_URL = "https://api.weixin.qq.com/sns/oauth2/access_token?appid={0}&secret={1}&code={2}&grant_type=authorization_code";
 
     public WxOauthInfo getWxOauthInfo(String appid, String secret, String code) {
+        logger.info(">>>>>>>>>>>>>>WxOauthInfo:code:" + code);
         if (!StringUtils.isEmpty(appid) && !StringUtils.isEmpty(secret) && !StringUtils.isEmpty(code)) {
             GET_ACCESS_TOKEN_URL = StringUtil.messageFormat(GET_ACCESS_TOKEN_URL, appid, secret, code);
             String result = HttpUtilClient.httpGet(GET_ACCESS_TOKEN_URL);

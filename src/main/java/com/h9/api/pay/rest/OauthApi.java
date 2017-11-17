@@ -6,6 +6,8 @@ import com.h9.api.pay.rest.model.WxOauthInfo;
 import com.h9.api.pay.service.PayService;
 import com.h9.api.pay.util.WechatUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -28,6 +30,8 @@ import java.net.URISyntaxException;
 @Path("oauth")
 public class OauthApi {
 
+    Logger logger = LoggerFactory.getLogger(OauthApi.class);
+
     @Value("${donation.url}")
     private String donationPageUrl;
     @Autowired
@@ -36,6 +40,7 @@ public class OauthApi {
     @GET
     @Path("redirect/{pageNo}")
     public Response oauthRedirect(@PathParam("pageNo") String pageNo, @QueryParam("code") String code) {
+        logger.info(">>>>>>>>>>>>>>oauthRedirect:code:" + code);
         if(StringUtils.isBlank(code)) {
             throw new PayException(PayException.ERROR, "网页授权错误:code为空");
         }
