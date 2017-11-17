@@ -24,7 +24,7 @@ public class BaseEntity implements Serializable {
     protected Date createTime;
 
     @UpdateTimestamp
-    @Column(name = "update_time", columnDefinition = "DATETIME COMMENT '更新时间'", insertable = false, updatable = false)
+    @Column(name = "update_time", columnDefinition = "DATETIME COMMENT '更新时间'")
     protected Date updateTime;
 
     @Column(name = "status", columnDefinition = "SMALLINT DEFAULT 0 COMMENT '状态'", nullable = false)
