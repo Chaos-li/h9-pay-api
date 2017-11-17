@@ -56,6 +56,8 @@ public class PayApi {
             requestData = WechatUtil.parseXml(request);
             notifyParams.putAll(requestData);
         } catch (Exception e) {
+            WxPayResponse response = new WxPayResponse();
+
             e.printStackTrace();
         }
         WxPayNotification notification = JSONObject.parseObject(JSONObject.toJSONString(notifyParams), WxPayNotification.class);

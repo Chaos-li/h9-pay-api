@@ -76,9 +76,9 @@ public class PayService {
         Donation donation = generateDonation(model);
 
         // 获取预支付订单
-        WxPrepayInfo prepayInfo = getWxPrepayInfo(donation, model.getOpenid());
+        //WxPrepayInfo prepayInfo = getWxPrepayInfo(donation, model.getOpenid());
 
-        return new Result(Result.SUCCESS, "获取预支付订单成功", prepayInfo);
+        return new Result(Result.SUCCESS, "获取预支付订单成功", null);
     }
 
     public WxPayResponse processWxNotification(WxPayNotification notification) {
@@ -213,6 +213,8 @@ public class PayService {
         }
         donation.setTotalAmount(totalAmount);
         donation.setUpdateTime(new Date());
+        donation.setEnterpriseMobile(model.getEnterpriseMobile());
+        donation.setPersonalMobile(model.getPersonalMobile());
         return donationRepository.save(donation);
     }
 

@@ -19,6 +19,10 @@ public class DonationModel extends BaseModel {
 
     private BigDecimal enterpriseAmount;
 
+    private String personalMobile;
+
+    private String enterpriseMobile;
+
     private Integer type;
 
     public String getOpenid() {
@@ -67,5 +71,21 @@ public class DonationModel extends BaseModel {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    public String getPersonalMobile() {
+        return personalMobile;
+    }
+
+    public void setPersonalMobile(String personalMobile) {
+        this.personalMobile = personalMobile;
+    }
+
+    public String getEnterpriseMobile() {
+        return enterpriseMobile;
+    }
+
+    public void setEnterpriseMobile(String enterpriseMobile) {
+        this.enterpriseMobile = enterpriseMobile;
     }
 }
