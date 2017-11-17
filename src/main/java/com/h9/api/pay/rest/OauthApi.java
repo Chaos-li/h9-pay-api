@@ -41,13 +41,13 @@ public class OauthApi {
         }
         PaymentConfig paymentConfig = payService.getPaymentConfig();
         WxOauthInfo oauthInfo = WechatUtil.getWxOauthInfo(paymentConfig.getAppId(), paymentConfig.getAppSecret(), code);
-        if(oauthInfo == null || !"0".equals(oauthInfo.getErrcode())) {
+        if(oauthInfo == null) {
             throw new PayException(PayException.ERROR, "网页授权错误:获取openid失败");
         }
         String openid = oauthInfo.getOpenid();
         URI uri;
         try {
-            uri = new URI(donationPageUrl+"?openid=" + openid);
+            uri = new URI(donationPageUrl+"?openid=" + openid + "&type=" + pageNo);
         } catch (URISyntaxException e) {
             throw new PayException(PayException.ERROR, "服务器繁忙");
         }
