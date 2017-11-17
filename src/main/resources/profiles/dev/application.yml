@@ -7,7 +7,7 @@ server:
 spring:
   # 数据源
   datasource:
-    url: jdbc:mysql://dbmysql.h9/h9_donate?useUnicode=true&characterEncoding=UTF-8
+    url: jdbc:mysql://172.16.0.36:3306/h9_donate?useUnicode=true&characterEncoding=UTF-8
     username: h9
     password: Wiu7fwfSmk
     driver-class-name: com.mysql.jdbc.Driver
@@ -33,7 +33,7 @@ spring:
   # redis
   redis:
     database: 0
-    host: redis.h9
+    host: 172.16.0.27
     port: 6379
     password: devvm-6VevDhWzGK
     # 连接超时时间（毫秒）
