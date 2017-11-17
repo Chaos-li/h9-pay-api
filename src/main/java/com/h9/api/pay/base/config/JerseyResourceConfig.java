@@ -21,7 +21,7 @@ public class JerseyResourceConfig extends ResourceConfig {
         register(RequestContextFilter.class);
         register(PayApi.class);
         register(OauthApi.class);
-        //register(RequestLoggerFilter.class);
+        register(RequestLoggerFilter.class);
         register(ResponseLoggerFilter.class);
 
     }
