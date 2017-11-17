@@ -1,0 +1,53 @@
+# server
+server:
+  port: 6307
+  context-path: /h9/pay/donate/
+
+
+spring:
+  # 数据源
+  datasource:
+    url: jdbc:mysql://dbmysql.h9/h9_donate?useUnicode=true&characterEncoding=UTF-8
+    username: h9
+    password: Wiu7fwfSmk
+    driver-class-name: com.mysql.jdbc.Driver
+  # jpa
+  jpa:
+    database: MYSQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+  jooq:
+    sql-dialect: org.hibernate.dialect.MySQL5Dialect
+
+  # devtools
+  devtools:
+    livereload:
+      enabled: true
+    restart:
+      enabled: true
+
+
+
+  # redis
+  redis:
+    database: 0
+    host: redis.h9
+    port: 6379
+    password: devvm-6VevDhWzGK
+    # 连接超时时间（毫秒）
+    timeout: 1000000
+    pool:
+      # 连接池最大连接数（使用负值表示没有限制）
+      max-active: 100
+      # 连接池中的最小空闲连接
+      min-idle: 10
+
+
+logging:
+  config: classpath:log4j.yml
+
+donation:
+  url: https://www.baidu.com
+
