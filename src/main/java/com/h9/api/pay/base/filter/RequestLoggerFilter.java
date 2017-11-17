@@ -28,13 +28,17 @@ public class RequestLoggerFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) throws IOException {
         MultivaluedMap<String, String> headers = requestContext.getHeaders();
 
+        requestContext.getHeaders().putSingle("Access-Control-Allow-Origin", "*");
+        requestContext.getHeaders().putSingle("Access-Control-Allow-Headers", "origin, content-type, accept, authorization");
+        requestContext.getHeaders().putSingle("Access-Control-Allow-Credentials", "true");
+        requestContext.getHeaders().putSingle("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
         String requestMethod = requestContext.getMethod();
         String uri = requestContext.getUriInfo().getRequestUri().toString();
         logger.debug("Request {} {}", requestMethod, uri);
         logger.debug("Request MediaType:" + requestContext.getMediaType());
         logger.debug("Request Headers:" + headers);
         try {
-            if (!uri.contains("notify") && ("POST".equals(requestMethod) || "PUT".equals(requestMethod) && requestContext.getEntityStream() != null)) {
+            if ("POST".equals(requestMethod) || "PUT".equals(requestMethod) && requestContext.getEntityStream() != null) {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 IOUtils.copy(requestContext.getEntityStream(), baos);
                 byte[] bytes = baos.toByteArray();
