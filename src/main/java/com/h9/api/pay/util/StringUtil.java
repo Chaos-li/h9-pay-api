@@ -6,6 +6,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.text.MessageFormat;
+import java.util.Base64;
 
 /**
  * @Description:
@@ -50,9 +51,5 @@ public class StringUtil {
         }
     }
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        String url = "https://donate-dev-h9.thy360.com/h9/pay/donate/oauth/redirect/1";
-        System.out.println(URLEncoder.encode(url, "utf-8"));
-    }
 
 }
