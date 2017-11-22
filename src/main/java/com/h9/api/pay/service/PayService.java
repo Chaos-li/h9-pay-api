@@ -225,9 +225,15 @@ public class PayService {
         if(StringUtils.isBlank(model.getDonor()) && StringUtils.isBlank(model.getEnterprise())) {
             throw new PayException(PayException.ERROR, "请填写完整信息");
         }
-        if((StringUtils.isNotBlank(model.getDonor()) && (model.getPersonalAmount() == null || model.getPersonalAmount().compareTo(BigDecimal.ZERO) < 1))
-                || (StringUtils.isNotBlank(model.getEnterprise()) && (model.getEnterpriseAmount() == null || model.getEnterpriseAmount().compareTo(BigDecimal.ZERO) < 1))) {
-            throw new PayException(PayException.ERROR, "请填写正确的捐赠金额");
+        if((StringUtils.isNotBlank(model.getDonor()) && model.getPersonalAmount() == null)
+                || (StringUtils.isNotBlank(model.getEnterprise()) && model.getEnterpriseAmount() == null)) {
+            throw new PayException(PayException.ERROR, "请填写捐赠金额");
+        }
+        if(model.getPersonalAmount() != null && model.getPersonalAmount().compareTo(new BigDecimal(1000)) == -1) {
+            throw new PayException(PayException.ERROR, "个人捐款金额不能低于1000元");
+        }
+        if(model.getEnterpriseAmount() != null && model.getEnterpriseAmount().compareTo(new BigDecimal(5000)) == -1) {
+            throw new PayException(PayException.ERROR, "企业捐款金额不能低于5000元");
         }
         if(StringUtils.isNotBlank(model.getEnterprise()) && StringUtils.isNotBlank(model.getDonor())) {
             model.setType(DonationTypeEnum.PERSONAL_AND_ENTERPRISE.getValue());

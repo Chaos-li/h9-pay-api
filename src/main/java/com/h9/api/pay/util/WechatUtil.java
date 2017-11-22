@@ -86,7 +86,7 @@ public class WechatUtil {
     }
 
     public static boolean verifySign(PaymentConfig paymentConfig, SortedMap<String, String> map) {
-        logger.debug("verifySign {0}, apiKey is {1}", map, paymentConfig.getApiKey());
+        logger.debug("verifySign {}, apiKey is {}", map, paymentConfig.getApiKey());
 
         if (!StringUtils.equals(paymentConfig.getMchId(), map.get("mch_id"))
                 || !StringUtils.equals(paymentConfig.getAppId(), map.get("appid"))) {
