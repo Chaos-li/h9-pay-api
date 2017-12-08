@@ -35,6 +35,7 @@ public class PayApi {
 
     @GET
     @Path("test")
+    @Produces("application/json;charset=utf-8")
     public Result test() {
         logger.info("a-{}   b-{}   c-{}", 1, 2, 3);
         return Result.SucceedResult("well done!");
