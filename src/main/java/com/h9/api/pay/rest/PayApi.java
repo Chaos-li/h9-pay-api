@@ -5,6 +5,8 @@ import com.h9.api.pay.base.Result;
 import com.h9.api.pay.rest.model.*;
 import com.h9.api.pay.service.PayService;
 import com.h9.api.pay.util.WechatUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,12 +28,15 @@ import java.util.TreeMap;
 @Path("pay")
 public class PayApi {
 
+    Logger logger = LoggerFactory.getLogger(PayApi.class);
+
     @Autowired
     private PayService payService;
 
     @GET
     @Path("test")
     public Result test() {
+        logger.info("a-{}   b-{}   c-{}", 1, 2, 3);
         return Result.SucceedResult("well done!");
     }
 

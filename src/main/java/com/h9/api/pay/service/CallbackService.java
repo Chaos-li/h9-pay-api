@@ -46,7 +46,7 @@ public class CallbackService {
 
         String json = HttpUtilClient.httpPost("application/json", orderCallBackUrl, payNotifyObject.toString());
 
-        logger.debug("processOrders order {0}, result is {1} ", orderCallBackUrl, json);
+        logger.debug("processOrders order {}, result is {} ", orderCallBackUrl, json);
 
         // 回调失败则开始重试机制
         if (!isCallbackSuccess(json)) {
@@ -56,7 +56,7 @@ public class CallbackService {
             Long times = redisTemplate.opsForValue().increment(timesKey, 1);
             // 总的重试时间持续184min，这里设置过期时间过190min
             redisTemplate.expire(timesKey, 190, TimeUnit.MINUTES);
-            logger.info("回调重试：尝试进行第{0}次重试，delay={1}s, timesKey={2}, notifyParams={3}", times, delayRates[times.intValue()], timesKey, payNotifyObject.toString());
+            logger.info("回调重试：尝试进行第{}次重试，delay={}s, timesKey={}, notifyParams={}", times, delayRates[times.intValue()], timesKey, payNotifyObject.toString());
             retryCallback(executor, delayRates[times.intValue()], orderCallBackUrl, payNotifyObject, timesKey);
             return Result.FailedResult("回调失败，尝试重试中...");
         } else {
@@ -77,14 +77,14 @@ public class CallbackService {
                     if (!isCallbackSuccess(result)) {
                         // delayRates.length比实际次数多1
                         if (times < delayRates.length) {
-                            logger.info("回调重试：尝试进行第{0}次重试，delay={1}s, timesKey={2}, notifyParams={3}", times, delayRates[times.intValue()], timesKey, payNotifyObject.toString());
+                            logger.info("回调重试：尝试进行第{}次重试，delay={}s, timesKey={}, notifyParams={3}", times, delayRates[times.intValue()], timesKey, payNotifyObject.toString());
                             retryCallback(executor, delayRates[times.intValue()], url, payNotifyObject, timesKey);
                         } else {
-                            logger.info("回调重试：完成指定回调次数之后仍未成功，该订单不再通知！已完成重试次数={0}, timesKey={1}, result={2}", times - 1, timesKey, result);
+                            logger.info("回调重试：完成指定回调次数之后仍未成功，该订单不再通知！已完成重试次数={}, timesKey={}, result={}", times - 1, timesKey, result);
                             executor.shutdownNow();
                         }
                     } else {
-                        logger.info("回调重试：回调成功！已完成重试次数={0}, timesKey={1}, result={2}", times - 1, timesKey, result);
+                        logger.info("回调重试：回调成功！已完成重试次数={}, timesKey={}, result={}", times - 1, timesKey, result);
                         redisTemplate.delete(timesKey);
                         // 更新支付记录状态
                         updateOrderStatus(payNotifyObject.getNotify_id());
