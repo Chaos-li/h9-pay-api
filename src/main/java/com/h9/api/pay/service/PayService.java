@@ -5,16 +5,18 @@ import com.alibaba.fastjson.JSONObject;
 import com.h9.api.pay.base.Result;
 import com.h9.api.pay.base.exception.PayException;
 import com.h9.api.pay.db.entity.Donation;
+import com.h9.api.pay.db.entity.Order;
 import com.h9.api.pay.db.entity.PaymentConfig;
 import com.h9.api.pay.db.repository.DonationRepository;
+import com.h9.api.pay.db.repository.OrderRepository;
 import com.h9.api.pay.db.repository.PaymentConfigRepository;
-import com.h9.api.pay.enums.DonationOrderStatus;
 import com.h9.api.pay.enums.DonationTypeEnum;
+import com.h9.api.pay.enums.OrderPayStatus;
+import com.h9.api.pay.enums.PayMethodEnum;
 import com.h9.api.pay.rest.model.*;
 import com.h9.api.pay.util.DateTimeUtil;
 import com.h9.api.pay.util.RedisKeyUtil;
 import com.h9.api.pay.util.WechatUtil;
-import com.sun.org.apache.regexp.internal.RE;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +27,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.text.ParseException;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -37,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class PayService {
 
-    Logger logger = LoggerFactory.getLogger(PayService.class);
+    static Logger logger = LoggerFactory.getLogger(PayService.class);
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -45,14 +49,18 @@ public class PayService {
     private PaymentConfigRepository paymentConfigRepository;
     @Autowired
     private DonationRepository donationRepository;
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private CallbackService callbackService;
 
-    public PaymentConfig getPaymentConfig() {
-        String paymentConfigKey = RedisKeyUtil.getPaymentConfigKey();
+    public PaymentConfig getPaymentConfig(String businessAppId) {
+        String paymentConfigKey = RedisKeyUtil.getPaymentConfigKey(businessAppId);
         PaymentConfig paymentConfig;
         if(redisTemplate.hasKey(paymentConfigKey)) {
             paymentConfig = JSONObject.parseObject(redisTemplate.opsForValue().get(paymentConfigKey), PaymentConfig.class);
         } else {
-            paymentConfig = paymentConfigRepository.findAll().get(0);
+            paymentConfig = paymentConfigRepository.findByBusinessAppId(businessAppId);
             if(paymentConfig == null) {
                 throw new PayException(PayException.ERROR, "未配置支付信息");
             } else {
@@ -76,13 +84,25 @@ public class PayService {
         Donation donation = generateDonation(model);
 
         // 获取预支付订单
-        WxPrepayInfo prepayInfo = getWxPrepayInfo(donation, model.getOpenid());
+        WxPrepayInfo prepayInfo = getWxPrepayInfo(donation.getOrderNo(), donation.getTotalAmount(), model.getOpenid(), model.getBusinessAppId());
 
         return new Result(Result.SUCCESS, "获取预支付订单成功", prepayInfo);
     }
 
-    public WxPayResponse processWxNotification(WxPayNotification notification) {
-        PaymentConfig paymentConfig = getPaymentConfig();
+    /**
+     * 生成订单，创建预支付订单
+     * @param model
+     * @return
+     */
+    public Result createPrepayOrder(OrderModel model) {
+        Order order = generateOrder(model);
+        // 获取预支付订单
+        WxPrepayInfo prepayInfo = getWxPrepayInfo(order.getOrderNo(), order.getTotalAmount(), model.getOpenid(), model.getBusinessAppId());
+        return new Result(Result.SUCCESS, "获取预支付订单成功", prepayInfo);
+    }
+
+    public WxPayResponse processWxNotification(WxPayNotification notification, String businessAppId) {
+        PaymentConfig paymentConfig = getPaymentConfig(businessAppId);
         SortedMap<String, String> map = notification.getNotify_params();
         String log = JSON.toJSONString(map);
         logger.info("notify params from wx : " + log);
@@ -95,8 +115,7 @@ public class PayService {
             }
             if (StringUtils.equals(notification.getReturn_code(), WechatUtil.SUCCESS)) {
                 String prepayId = notification.getOut_trade_no();
-
-                processOrder(notification, log);
+                processOrder(notification, log, businessAppId, paymentConfig.getCallbackUrl());
                 response.setReturn_code(WechatUtil.SUCCESS);
             } else {
                 logger.error("get failed message from wxpay:" + notification.getReturn_msg());
@@ -109,25 +128,108 @@ public class PayService {
         return response;
     }
 
-    private void processOrder(WxPayNotification notification, String log) {
+    /**
+     * 创建订单
+     * @param model model
+     * @return Order
+     */
+    private Order generateOrder(OrderModel model) {
+        if(model == null) {
+            throw new PayException("参数错误");
+        }
+        if(StringUtils.isBlank(model.getOpenid())) {
+            throw new PayException("openid不能为空");
+        }
+        if(StringUtils.isBlank(model.getBusinessOrderId())) {
+            throw new PayException("订单号不能为空");
+        }
+        if(model.getTotalAmount() == null || model.getTotalAmount().compareTo(BigDecimal.ZERO) != 1) {
+            throw new PayException("订单金额错误");
+        }
+        if(StringUtils.isBlank(model.getBusinessAppId())) {
+            throw new PayException("业务appid不能为空");
+        }
+        Order order = new Order();
+        order.setBusinessOrderId(model.getBusinessOrderId());
+        order.setTotalAmount(model.getTotalAmount());
+        order.setUpdateTime(new Date());
+        order.setOrderNo(generateOrderNo());
+        order.setBusinessAppId(model.getBusinessAppId());
+        return orderRepository.save(order);
+    }
+
+    private void processOrder(WxPayNotification notification, String log, String businessAppId, String callbackUrl) {
+        if(businessAppId.equals("appidh9donateeqzkv")) {
+            processDonation(notification, log);
+            return;
+        }
+        String orderNo = notification.getOut_trade_no();
+        Order order = orderRepository.findByOrderNo(orderNo);
+        if(order == null) {
+            logger.error("回调商户订单号找不到对应订单");
+            throw new PayException( "没有对应订单");
+        }
+        if(order.getStatus() != OrderPayStatus.UN_PAY.getValue()) {
+            logger.error("回调商户订单号对应订单非待支付状态");
+            throw new PayException("回调商户订单号对应订单非待支付状态");
+        }
+
+        BigDecimal totalFee = new BigDecimal(notification.getTotal_fee());
+        BigDecimal totalAmount = order.getTotalAmount().multiply(new BigDecimal(100)).setScale(0);
+        if(totalAmount.compareTo(totalFee) != 0) {
+            logger.error("回调商户订单支付金额异常:total_fee is " + notification.getTotal_fee() + "  but totalAmount is " + order.getTotalAmount());
+            throw new PayException("回调商户订单支付金额异常");
+        }
+        order.setPayStatus(OrderPayStatus.PAID.getValue());
+        order.setNotifyLog(log);
+        order.setTransactionId(notification.getTransaction_id());
+        order.setUpdateTime(new Date());
+        order = orderRepository.save(order);
+
+        // 回调业务系统
+        callbackBusinessSystem(callbackUrl, order, notification);
+
+    }
+
+    private void callbackBusinessSystem(String callbackUrl, Order order, WxPayNotification notification) {
+        PayNotifyObject payNotifyObject = new PayNotifyObject();
+        payNotifyObject.setNotify_id(order.getId());
+        payNotifyObject.setOrder_id(order.getBusinessOrderId());
+        payNotifyObject.setPay_time(DateTimeUtil.dateToyyyyMMddHHmmss(order.getUpdateTime()));
+        payNotifyObject.setPay_way(PayMethodEnum.WXJS.getKey());
+        payNotifyObject.setCash_fee(new BigDecimal(notification.getCash_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
+        payNotifyObject.setTotal_fee(new BigDecimal(notification.getTotal_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
+        payNotifyObject.setCoupon_fee(new BigDecimal(notification.getCoupon_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
+        payNotifyObject.setCoupon_count(notification.getCoupon_count());
+        payNotifyObject.setApp_id(order.getBusinessAppId());
+        payNotifyObject.setPay_type("order");
+        payNotifyObject.setTrade_no(notification.getTransaction_id());
+        payNotifyObject.setNotify_time(DateTimeUtil.dateToyyyyMMddHHmmss(new Date()));
+        payNotifyObject.setNotify_type("pay_notify");
+
+        Result<?> rtn = callbackService.callback(callbackUrl, payNotifyObject);
+        logger.info("call back result:{}", rtn.getMsg());
+    }
+
+    private void processDonation(WxPayNotification notification, String log) {
         String orderNo = notification.getOut_trade_no();
         Donation donation = donationRepository.findByOrderNo(orderNo);
         if(donation == null) {
             logger.error("回调商户订单号找不到对应订单");
-            throw new PayException(PayException.ERROR, "没有对应订单");
+            throw new PayException("没有对应订单");
         }
-        if(donation.getStatus() != DonationOrderStatus.UN_PAY.getValue()) {
+        if(donation.getStatus() != OrderPayStatus.UN_PAY.getValue()) {
             logger.error("回调商户订单号对应订单非待支付状态");
-            throw new PayException(PayException.ERROR, "回调商户订单号对应订单非待支付状态");
+            throw new PayException("回调商户订单号对应订单非待支付状态");
         }
 
         BigDecimal totalFee = new BigDecimal(notification.getTotal_fee());
         BigDecimal totalAmount = donation.getTotalAmount().multiply(new BigDecimal(100)).setScale(0);
         if(totalAmount.compareTo(totalFee) != 0) {
             logger.error("回调商户订单支付金额异常:total_fee is " + notification.getTotal_fee() + "  but totalAmount is " + donation.getTotalAmount());
-            throw new PayException(PayException.ERROR, "回调商户订单支付金额异常");
+            throw new PayException("回调商户订单支付金额异常");
         }
-        donation.setStatus(DonationOrderStatus.PAID.getValue());
+        donation.setStatus(OrderPayStatus.PAID.getValue());
         donation.setNotifyLog(log);
         donation.setUpdateTime(new Date());
         donationRepository.save(donation);
@@ -135,36 +237,39 @@ public class PayService {
 
     /**
      * 生成已支付信息
-     * @param donation
-     * @param openid
-     * @return
+     * @param orderNo orderNo
+     * @param totalAmount totalAmount
+     * @param openid openid
+     * @return WxPrepayInfo
      */
-    private WxPrepayInfo getWxPrepayInfo(Donation donation, String openid) {
-        String orderNo = donation.getOrderNo();
+    private WxPrepayInfo getWxPrepayInfo(String orderNo, BigDecimal totalAmount, String openid, String businessAppId) {
         String prepayInfoKey = RedisKeyUtil.getWXJSPrepayInfoKey(orderNo);
         if(redisTemplate.hasKey(prepayInfoKey)) {
-            WxPrepayInfo prepayInfo = JSONObject.parseObject(redisTemplate.opsForValue().get(prepayInfoKey), WxPrepayInfo.class);
-            return prepayInfo;
+            return JSONObject.parseObject(redisTemplate.opsForValue().get(prepayInfoKey), WxPrepayInfo.class);
         }
 
-        PaymentConfig paymentConfig = getPaymentConfig();
+        PaymentConfig paymentConfig = getPaymentConfig(businessAppId);
 
         // 拼接xml参数
         Map<String, String> wxPrepayParams = new HashMap<>();
-        wxPrepayParams.put("payAmount", String.valueOf(donation.getTotalAmount()));
-        wxPrepayParams.put("orderId", donation.getOrderNo());
-        wxPrepayParams.put("openId", openid);
+        wxPrepayParams.put("payAmount", String.valueOf(totalAmount));
+        wxPrepayParams.put("orderId", orderNo);
+        if(StringUtils.isNotBlank(openid)) {
+            wxPrepayParams.put("openId", openid);
+        }
         String payArgs = WechatUtil.getPayArgs(paymentConfig, wxPrepayParams);
 
         // 调用统一下单接口
         String result = WechatUtil.doUnifiedOrder(payArgs);
 
         Map<String, String> xmlMap = WechatUtil.decodeXml(result);
-        String return_code = xmlMap.get("return_code");
 
-        if (!StringUtils.equals(return_code, "SUCCESS")) {
+        if (!StringUtils.equals(xmlMap.get("return_code"), "SUCCESS")) {
             logger.error("获取预支付订单失败:" + JSONObject.toJSONString(xmlMap));
-            throw new PayException(PayException.ERROR, "获取预支付订单失败:[" + xmlMap.get("err_code_des")+"]");
+            throw new PayException(PayException.ERROR, "获取预支付订单失败:[" + xmlMap.get("return_msg")+"]");
+        } else if(StringUtils.equals(xmlMap.get("result_code"), "FAIL")) {
+            logger.error("获取预支付订单失败:" + JSONObject.toJSONString(xmlMap));
+            throw new PayException(PayException.ERROR, "获取预支付订单失败:[" + xmlMap.get("err_code")+ ":" + xmlMap.get("err_code_des") + "]");
         }
         String prePayId = xmlMap.get("prepay_id");
         String packageParam = "prepay_id=" + prePayId;
@@ -203,19 +308,16 @@ public class PayService {
         } else {
             totalAmount = donation.getPersonalAmount().add(donation.getEnterpriseAmount());
         }
-        try {
-            // 生成支付订单号
-            String orderNo = DateTimeUtil.dateToyyyyMMddHHmmss(new Date()).concat(redisTemplate.opsForValue().increment(RedisKeyUtil.getOrderSNKey(), 1L).toString());
-            donation.setOrderNo(orderNo);
-        } catch (ParseException e) {
-            logger.error("生成支付订单号异常", e);
-            throw new PayException(PayException.ERROR, "服务器繁忙");
-        }
+        donation.setOrderNo(generateOrderNo());
         donation.setTotalAmount(totalAmount);
         donation.setUpdateTime(new Date());
         donation.setEnterpriseMobile(model.getEnterpriseMobile());
         donation.setPersonalMobile(model.getPersonalMobile());
         return donationRepository.save(donation);
+    }
+
+    private String generateOrderNo() {
+        return DateTimeUtil.dateToyyyyMMddHHmmss(new Date()).concat(redisTemplate.opsForValue().increment(RedisKeyUtil.getOrderSNKey(), 1L).toString());
     }
 
     private void validateDonation(DonationModel model) {
@@ -243,5 +345,6 @@ public class PayService {
             model.setType(DonationTypeEnum.PERSONAL.getValue());
         }
     }
+
 
 }

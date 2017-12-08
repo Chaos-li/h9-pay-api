@@ -50,6 +50,9 @@ public class Donation extends BaseEntity {
     @Column(name = "notify_log", columnDefinition = "VARCHAR(512) COMMENT '支付回调原始记录'")
     private String notifyLog;
 
+    @Column(name = "status", columnDefinition = "SMALLINT DEFAULT 0 COMMENT '支付状态'", nullable = false)
+    protected Integer status;
+
     public String getPersonalMobile() {
         return personalMobile;
     }
@@ -128,5 +131,13 @@ public class Donation extends BaseEntity {
 
     public void setNotifyLog(String notifyLog) {
         this.notifyLog = notifyLog;
+    }
+
+    public Integer getStatus() {
+        return status;
+    }
+
+    public void setStatus(Integer status) {
+        this.status = status;
     }
 }

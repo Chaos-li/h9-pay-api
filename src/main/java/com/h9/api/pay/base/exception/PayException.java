@@ -17,6 +17,15 @@ public class PayException extends RuntimeException {
 
     /**
      * 构造异常类
+     * @param message
+     */
+    public PayException(String message) {
+        this.code = ERROR;
+        this.message = message;
+    }
+
+ /**
+     * 构造异常类
      * @param code
      * @param message
      */

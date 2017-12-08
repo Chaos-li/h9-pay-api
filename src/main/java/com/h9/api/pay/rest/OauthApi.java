@@ -44,7 +44,7 @@ public class OauthApi {
         if(StringUtils.isBlank(code)) {
             throw new PayException(PayException.ERROR, "网页授权错误:code为空");
         }
-        PaymentConfig paymentConfig = payService.getPaymentConfig();
+        PaymentConfig paymentConfig = payService.getPaymentConfig("appidh9donateeqzkv");
         WxOauthInfo oauthInfo = new WechatUtil().getWxOauthInfo(paymentConfig.getAppId(), paymentConfig.getAppSecret(), code);
         if(oauthInfo == null) {
             throw new PayException(PayException.ERROR, "网页授权错误:获取openid失败");

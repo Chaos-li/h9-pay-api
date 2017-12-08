@@ -6,6 +6,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 /**
  * @Description: 支付配置
@@ -15,7 +16,7 @@ import javax.persistence.Table;
 @Entity
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "payment_config")
+@Table(name = "payment_config", uniqueConstraints = {@UniqueConstraint(columnNames="business_app_id")})
 public class PaymentConfig extends BaseEntity {
 
     @Column(name = "app_id", columnDefinition = "VARCHAR(255) COMMENT 'appid'", nullable = false)
@@ -38,6 +39,15 @@ public class PaymentConfig extends BaseEntity {
 
     @Column(name = "notify_url", columnDefinition = "VARCHAR(255) COMMENT '支付回调地址'", nullable = false)
     private String notifyUrl;
+
+    @Column(name = "callback_url", columnDefinition = "VARCHAR(255) COMMENT '业务回调地址'")
+    private String callbackUrl;
+
+    @Column(name = "business_app_id", columnDefinition = "VARCHAR(32) COMMENT '业务appId'")
+    private String businessAppId;
+
+    @Column(name = "status", columnDefinition = "SMALLINT DEFAULT 0 COMMENT '状态'", nullable = false)
+    protected Integer status;
 
 
     public String getAppId() {
@@ -94,5 +104,21 @@ public class PaymentConfig extends BaseEntity {
 
     public void setNotifyUrl(String notifyUrl) {
         this.notifyUrl = notifyUrl;
+    }
+
+    public String getCallbackUrl() {
+        return callbackUrl;
+    }
+
+    public void setCallbackUrl(String callbackUrl) {
+        this.callbackUrl = callbackUrl;
+    }
+
+    public String getBusinessAppId() {
+        return businessAppId;
+    }
+
+    public void setBusinessAppId(String businessAppId) {
+        this.businessAppId = businessAppId;
     }
 }

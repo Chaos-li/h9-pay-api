@@ -25,6 +25,8 @@ public class DonationModel extends BaseModel {
 
     private Integer type;
 
+    private String businessAppId = "appidh9donateeqzkv";
+
     public String getOpenid() {
         return openid;
     }
@@ -87,5 +89,13 @@ public class DonationModel extends BaseModel {
 
     public void setEnterpriseMobile(String enterpriseMobile) {
         this.enterpriseMobile = enterpriseMobile;
+    }
+
+    public String getBusinessAppId() {
+        return businessAppId;
+    }
+
+    public void setBusinessAppId(String businessAppId) {
+        this.businessAppId = businessAppId;
     }
 }

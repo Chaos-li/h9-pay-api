@@ -197,12 +197,6 @@
 			</properties>
 		</profile>
 		<profile>
-			<id>test</id>
-			<properties>
-				<package.environment>test</package.environment>
-			</properties>
-		</profile>
-		<profile>
 			<id>dev</id>
 			<properties>
 				<package.environment>dev</package.environment>

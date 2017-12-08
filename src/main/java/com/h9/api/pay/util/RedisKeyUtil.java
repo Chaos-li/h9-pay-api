@@ -8,8 +8,8 @@ package com.h9.api.pay.util;
 public class RedisKeyUtil {
 
     /** 支付配置 */
-    public static String getPaymentConfigKey() {
-        return "h9:pay:payment:config";
+    public static String getPaymentConfigKey(String businessAppId) {
+        return "h9:pay:payment:config:" + businessAppId;
     }
 
     /** 订单自增序列号 */
@@ -20,6 +20,12 @@ public class RedisKeyUtil {
     /** 微信公众号预支付订单信息 */
     public static String getWXJSPrepayInfoKey(String orderNo) {
         return "h9:pay:wxjs:prepay:info:" + orderNo;
+    }
+    /**
+     * 订单回调次数Key h9:pay:order:notify:times:{appId}:{orderId}
+     */
+    public static String getOrderNotifyTimes(String businessAppId, String orderId) {
+        return "h9:pay:order:notify:times:" + businessAppId + ":" + orderId;
     }
 
 }

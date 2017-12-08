@@ -2,10 +2,7 @@ package com.h9.api.pay.rest;
 
 import com.alibaba.fastjson.JSONObject;
 import com.h9.api.pay.base.Result;
-import com.h9.api.pay.rest.model.BaseXmlInfo;
-import com.h9.api.pay.rest.model.DonationModel;
-import com.h9.api.pay.rest.model.WxPayNotification;
-import com.h9.api.pay.rest.model.WxPayResponse;
+import com.h9.api.pay.rest.model.*;
 import com.h9.api.pay.service.PayService;
 import com.h9.api.pay.util.WechatUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,11 +42,21 @@ public class PayApi {
         return payService.submitDonation(model);
     }
 
+
     @POST
-    @Path("notify/wxjs")
+    @Path("create")
+    @Produces("application/json;charset=utf-8")
+    public Result createPrepayOrder(OrderModel model) {
+        return payService.createPrepayOrder(model);
+    }
+
+
+
+    @POST
+    @Path("notify/wxjs/{appId}")
     @Consumes("text/xml;charset=utf-8")
     @Produces("text/xml;charset=utf-8")
-    public WxPayResponse wxjsPayResponse(@Context HttpServletRequest request) {
+    public WxPayResponse wxjsPayResponse(@Context HttpServletRequest request, @PathParam("appId") String appId) {
         SortedMap<String, String> notifyParams = new TreeMap<>();
         Map<String, String> requestData = new HashMap<>();
         try {
@@ -61,7 +68,7 @@ public class PayApi {
         }
         WxPayNotification notification = JSONObject.parseObject(JSONObject.toJSONString(notifyParams), WxPayNotification.class);
         notification.setNotify_params(notifyParams);
-        return payService.processWxNotification(notification);
+        return payService.processWxNotification(notification, appId);
     }
 
 

@@ -9,4 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @Date 2017/11/16 14:24 星期四
  */
 public interface PaymentConfigRepository extends JpaRepository<PaymentConfig, Long> {
+
+    PaymentConfig findByBusinessAppId(String businessAppId);
+
 }

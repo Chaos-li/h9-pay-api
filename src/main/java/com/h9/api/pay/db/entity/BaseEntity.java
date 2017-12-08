@@ -27,9 +27,6 @@ public class BaseEntity implements Serializable {
     @Column(name = "update_time", columnDefinition = "DATETIME COMMENT '更新时间'")
     protected Date updateTime;
 
-    @Column(name = "status", columnDefinition = "SMALLINT DEFAULT 0 COMMENT '状态'", nullable = false)
-    protected Integer status;
-
     @Version
     @Column(name = "version", columnDefinition = "INT COMMENT '版本号 '")
     protected Integer version;
@@ -56,14 +53,6 @@ public class BaseEntity implements Serializable {
 
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
     }
 
     public Integer getVersion() {

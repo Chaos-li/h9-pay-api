@@ -1,5 +1,7 @@
 package com.h9.api.pay.util;
 
+import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.yaml.snakeyaml.util.UriEncoder;
 
 import java.io.UnsupportedEncodingException;
@@ -49,6 +51,15 @@ public class StringUtil {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static String toJson(Object obj) {
+        return JSONObject.toJSONString(obj);
+    }
+
+
+    public static void main(String[] args) {
+        System.out.println(RandomStringUtils.random(5, true, false).toLowerCase());
     }
 
 
