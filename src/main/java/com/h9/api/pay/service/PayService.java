@@ -197,9 +197,13 @@ public class PayService {
         payNotifyObject.setOrder_id(order.getBusinessOrderId());
         payNotifyObject.setPay_time(DateTimeUtil.dateToyyyyMMddHHmmss(order.getUpdateTime()));
         payNotifyObject.setPay_way(PayMethodEnum.WXJS.getKey());
-        payNotifyObject.setCash_fee(new BigDecimal(notification.getCash_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
+        if(notification.getCash_fee() != null) {
+            payNotifyObject.setCash_fee(new BigDecimal(notification.getCash_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
+        }
         payNotifyObject.setTotal_fee(new BigDecimal(notification.getTotal_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
-        payNotifyObject.setCoupon_fee(new BigDecimal(notification.getCoupon_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
+        if(notification.getCoupon_fee() != null) {
+            payNotifyObject.setCoupon_fee(new BigDecimal(notification.getCoupon_fee()).divide(new BigDecimal(100), 2, BigDecimal.ROUND_HALF_UP).toString());
+        }
         payNotifyObject.setCoupon_count(notification.getCoupon_count());
         payNotifyObject.setApp_id(order.getBusinessAppId());
         payNotifyObject.setPay_type("order");
