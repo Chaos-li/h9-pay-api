@@ -105,7 +105,7 @@ public class WechatUtil {
         sb.append("key=").append(paymentConfig.getApiKey());
         logger.debug("=====sb.toString()====" + sb.toString());
         String signNew = generatePaySign(sb.toString());
-        logger.debug("signNew is {0}, sign from wx is {1}", signNew, map.get("sign"));
+        logger.debug("signNew is {}, sign from wx is {}", signNew, map.get("sign"));
         return StringUtils.equals(signNew, map.get("sign"));
     }
 
