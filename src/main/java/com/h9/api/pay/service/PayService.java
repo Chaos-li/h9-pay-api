@@ -84,7 +84,7 @@ public class PayService {
         Donation donation = generateDonation(model);
 
         // 获取预支付订单
-        WxPrepayInfo prepayInfo = getWxPrepayInfo(donation.getOrderNo(), donation.getTotalAmount(), model.getOpenid(), model.getBusinessAppId());
+        WxPrepayInfo prepayInfo = getWxPrepayInfo(donation.getId().toString(), donation.getOrderNo(), donation.getTotalAmount(), model.getOpenid(), model.getBusinessAppId());
 
         return new Result(Result.SUCCESS, "获取预支付订单成功", prepayInfo);
     }
@@ -97,7 +97,7 @@ public class PayService {
     public Result createPrepayOrder(OrderModel model) {
         Order order = generateOrder(model);
         // 获取预支付订单
-        WxPrepayInfo prepayInfo = getWxPrepayInfo(order.getOrderNo(), order.getTotalAmount(), model.getOpenid(), model.getBusinessAppId());
+        WxPrepayInfo prepayInfo = getWxPrepayInfo(order.getBusinessOrderId(), order.getOrderNo(), order.getTotalAmount(), model.getOpenid(), model.getBusinessAppId());
         return new Result(Result.SUCCESS, "获取预支付订单成功", prepayInfo);
     }
 
@@ -246,8 +246,8 @@ public class PayService {
      * @param openid openid
      * @return WxPrepayInfo
      */
-    private WxPrepayInfo getWxPrepayInfo(String orderNo, BigDecimal totalAmount, String openid, String businessAppId) {
-        String prepayInfoKey = RedisKeyUtil.getWXJSPrepayInfoKey(orderNo);
+    private WxPrepayInfo getWxPrepayInfo(String businessOrderId, String orderNo, BigDecimal totalAmount, String openid, String businessAppId) {
+        String prepayInfoKey = RedisKeyUtil.getWXJSPrepayInfoKey(businessOrderId, businessAppId);
         if(redisTemplate.hasKey(prepayInfoKey)) {
             return JSONObject.parseObject(redisTemplate.opsForValue().get(prepayInfoKey), WxPrepayInfo.class);
         }

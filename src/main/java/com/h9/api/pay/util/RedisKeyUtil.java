@@ -18,8 +18,8 @@ public class RedisKeyUtil {
     }
 
     /** 微信公众号预支付订单信息 */
-    public static String getWXJSPrepayInfoKey(String orderNo) {
-        return "h9:pay:wxjs:prepay:info:" + orderNo;
+    public static String getWXJSPrepayInfoKey(String businessAppId, String orderId) {
+        return "h9:pay:wxjs:prepay:info:" + businessAppId + ":" + orderId;
     }
     /**
      * 订单回调次数Key h9:pay:order:notify:times:{appId}:{orderId}
