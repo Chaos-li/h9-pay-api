@@ -44,7 +44,7 @@ public class CallbackService {
 
     public Result<?> callback(String orderCallBackUrl, PayNotifyObject payNotifyObject) {
 
-        String json = HttpUtilClient.httpPost(orderCallBackUrl, "application/json", payNotifyObject.toString());
+        String json = HttpUtilClient.httpPost(orderCallBackUrl, payNotifyObject.toString());
 
         logger.debug("processOrders order {}, result is {} ", orderCallBackUrl, json);
 
@@ -72,7 +72,7 @@ public class CallbackService {
             @Override
             public void run() {
                 try {
-                    String result = HttpUtilClient.httpPost(url, "application/json", payNotifyObject.toString());
+                    String result = HttpUtilClient.httpPost(url, payNotifyObject.toString());
                     Long times = redisTemplate.opsForValue().increment(timesKey, 1);
                     if (!isCallbackSuccess(result)) {
                         // delayRates.length比实际次数多1
